@@ -1,40 +1,51 @@
 package com.example.biblioteca.controller;
 
 
-import com.example.biblioteca.livro.Livro;
-import com.example.biblioteca.livro.LivroRepository;
-import com.example.biblioteca.livro.LivroRequestDTO;
-import com.example.biblioteca.livro.LivroResponseDTO;
+import com.example.biblioteca.model.Livro;
+import com.example.biblioteca.repository.LivroRepository;
+import com.example.biblioteca.model.dto.LivroRequestDTO;
+import com.example.biblioteca.model.dto.LivroResponseDTO;
+import com.example.biblioteca.service.LivroService;
+import com.example.biblioteca.service.LivroServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping("livro")
+@RequiredArgsConstructor
 public class LivroController {
 
 
-    @Autowired
-    private LivroRepository repository;
 
-    @CrossOrigin(origins= "*", allowedHeaders = "*")
-    @GetMapping
-    public List<LivroResponseDTO> getAll(){
-    List<LivroResponseDTO> livroList = repository.findAll().stream().map(LivroResponseDTO::new).toList();
-    return livroList;
-    }
+    private final LivroService livroService;
+
+  @PreAuthorize("hasRole('PRODUCT_SELECT')")
+  @GetMapping
+  public List<LivroResponseDTO> listAll(){
+      return livroService.listAll();
+  }
+
+  @PreAuthorize("hasRole('PRODUCT_CREATE')")
+  @PostMapping
+  public Livro create(@RequestBody LivroRequestDTO livro)  {
+      return livroService.create(livro);
+  }
 
 
-    @CrossOrigin(origins= "*", allowedHeaders = "*")
-    @PostMapping
-    public void saveLivro(@RequestBody LivroRequestDTO data){
-        Livro livroData = new Livro(data);
-        repository.save(livroData);
-        return;
+    @PreAuthorize("hasRole('PRODUCT_UPDATE')")
+    @PutMapping
+  public Livro update(Livro livro){
+      return livroService.update(livro);
 
-    }
+  }
+
+  public void delete(@RequestParam("id") Long id){
+      livroService.delete(id);
+  }
 
 }

@@ -1,6 +1,7 @@
-package com.example.biblioteca.livro;
+package com.example.biblioteca.model;
 
 
+import com.example.biblioteca.model.dto.LivroRequestDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
