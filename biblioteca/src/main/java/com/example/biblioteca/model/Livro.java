@@ -8,6 +8,7 @@ import lombok.*;
 @Table(name = "livros")
 @Entity(name = "livros")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
