@@ -1,7 +1,7 @@
 package com.example.biblioteca.model;
 
 
-import com.example.biblioteca.model.dto.LivroRequestDTO;
+import com.example.biblioteca.model.dto.Livro.LivroRequestDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,12 +20,15 @@ public class Livro {
     private Long ISBN;
     private String descricao;
     private String autor;
+    private String disponibilidade;
+
 
     public Livro(LivroRequestDTO data){
         this.title = data.title();
         this.ISBN = data.ISBN();
         this.descricao = data.descricao();
         this.autor = data.autor();
+        this.disponibilidade = data.disponibilidade();
     }
 
 }

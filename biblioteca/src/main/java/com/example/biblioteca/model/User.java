@@ -1,5 +1,6 @@
 package com.example.biblioteca.model;
 
+import com.example.biblioteca.model.dto.UserRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,4 +24,10 @@ public class User {
     @ManyToMany
     private List<Role> roles;
 
+    public User(UserRequestDTO data){
+        this.username = data.username();
+        this.password = data.password();
+    }
+
 }
+

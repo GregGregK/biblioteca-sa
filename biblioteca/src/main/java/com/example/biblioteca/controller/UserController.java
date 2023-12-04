@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
 
-   private final UserService userService;
+    private final UserService userService;
 
-   @PostMapping
-   public User create(@RequestBody User user){
-       return userService.create(user);
-   }
+    @PostMapping
+    public User create(@RequestBody User user){
+        return userService.create(user);
+    }
 
 }
