@@ -53,10 +53,10 @@ pode ser encontrada em:
 http://localhost:8080/swagger-ui/index.html \
 lembre de adicionar "/v3/api-docs" na busca
 
-![img.png](img.png)
+![img.png](biblioteca/img.png)
 
 - Print de como fica salvo os usuários e suas senhas \
-  ![img.png](img.png)
+  ![img.png](biblioteca/img.png)
 
 
 - Print de como fica as roles \
