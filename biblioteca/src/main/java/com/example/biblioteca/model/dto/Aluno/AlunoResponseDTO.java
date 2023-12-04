@@ -1,10 +1,14 @@
 package com.example.biblioteca.model.dto.Aluno;
 
 import com.example.biblioteca.model.Aluno;
+import lombok.Data;
 
-public record AlunoResponseDTO(Long id, String nome, Long matricula, String status) {
+@Data
+public class AlunoResponseDTO{
 
-    public AlunoResponseDTO(Aluno aluno) {
-        this(aluno.getId(), aluno.getNome(), aluno.getMatricula(), aluno.getStatus());
-    }
+    private String nome;
+    private Long matricula;
+    private String status;
+    private String contato;
+
 }

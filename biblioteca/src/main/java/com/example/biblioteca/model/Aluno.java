@@ -29,15 +29,12 @@ public class Aluno {
     private LocalDateTime createdAt;
 
     private String status;
+    private String contato;
 
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
     }
 
-    public Aluno(AlunoRequestDTO data) {
-        this.nome = data.nome();
-        this.matricula = data.matricula();
-        this.status = data.status();
-    }
+
 }

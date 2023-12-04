@@ -23,12 +23,5 @@ public class Livro {
     private String disponibilidade;
 
 
-    public Livro(LivroRequestDTO data){
-        this.title = data.title();
-        this.ISBN = data.ISBN();
-        this.descricao = data.descricao();
-        this.autor = data.autor();
-        this.disponibilidade = data.disponibilidade();
-    }
 
 }

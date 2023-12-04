@@ -1,12 +1,14 @@
 package com.example.biblioteca.service;
 
 import com.example.biblioteca.model.Aluno;
+import com.example.biblioteca.model.Bibliotecario;
 import com.example.biblioteca.model.dto.Aluno.AlunoRequestDTO;
 import com.example.biblioteca.model.dto.Aluno.AlunoResponseDTO;
 import com.example.biblioteca.repository.AlunoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,86 +28,61 @@ public class AlunoService {
         this.alunoRepository = alunoRepository;
     }
 
-    public AlunoResponseDTO addAluno(AlunoRequestDTO alunoRequestDTO) {
-
-        validateStatus(alunoRequestDTO.status());
-
-        Aluno aluno = new Aluno(alunoRequestDTO);
-        Aluno savedAluno;
-        try {
-            savedAluno = alunoRepository.save(aluno);
-        } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("Erro ao criar aluno. Verifique se todos os campos estão preenchidos corretamente.");
-        }
-        return new AlunoResponseDTO(savedAluno);
+    //Adiciona Aluno
+    public Aluno addAluno(AlunoRequestDTO data) {
+        Aluno aluno = new Aluno();
+        aluno.setNome(data.getNome());
+        aluno.setMatricula(data.getMatricula());
+        aluno.setContato(data.getContato());
+        alunoRepository.save(aluno);
+        return aluno;
     }
 
+    //Deleta Aluno
     public void removeAluno(Long alunoID) {
-        Optional<Aluno> aluno = alunoRepository.findById(alunoID);
-        aluno.ifPresentOrElse(
-                a -> {
-                    alunoRepository.deleteById(alunoID);
-                    logger.log(Level.INFO, "Aluno deletado: {0}", a.getNome());
-                },
-                () -> logger.log(Level.WARNING, "Tentativa de deletar aluno inexistente com ID: {0}", alunoID)
-        );
+        alunoRepository.deleteById(alunoID);
     }
 
-    public AlunoResponseDTO updateAluno(Long alunoId, AlunoRequestDTO alunoRequestDTO) {
-        validateStatus(alunoRequestDTO.status());
+    //Atualiza Aluno
+    public ResponseEntity<Aluno> updateAluno(Long alunoId, AlunoResponseDTO alunoResponseDTO) {
+        Aluno aluno = alunoRepository.findById(alunoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com o ID: " + alunoId));
 
-        Aluno existingAluno = alunoRepository.findById(alunoId)
-                .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado com o ID: " + alunoId));
+        if (alunoResponseDTO.getNome() != null) {
+            alunoResponseDTO.setNome(alunoResponseDTO.getNome());
+        }
 
-        existingAluno.setNome(alunoRequestDTO.nome());
-        existingAluno.setMatricula(alunoRequestDTO.matricula());
-        existingAluno.setStatus(alunoRequestDTO.status());
+        if (alunoResponseDTO.getMatricula() != null) {
+            aluno.setMatricula(alunoResponseDTO.getMatricula());
+        }
+        if (alunoResponseDTO.getContato() != null) {
+            aluno.setContato(alunoResponseDTO.getContato());
+        }
 
-        Aluno updateAluno = alunoRepository.save(existingAluno);
-        return new AlunoResponseDTO(updateAluno);
+
+        alunoRepository.save(aluno);
+        return ResponseEntity.ok(aluno);
     }
 
-    public List<AlunoResponseDTO> alunoList() {
-        List<Aluno> alunos = alunoRepository.findAll();
-        return alunos.stream()
-                .map(AlunoResponseDTO::new)
-                .collect(Collectors.toList());
+
+    //Lista Aluno
+    public List<Aluno> alunoList() {
+        return alunoRepository.findAll();
     }
 
-    public AlunoResponseDTO getAlunoById(Long alunoId) {
+    public Aluno getAlunoById(Long alunoId) {
         Optional<Aluno> alunoOptional = alunoRepository.findById(alunoId);
         if (alunoOptional.isPresent()) {
             Aluno aluno = alunoOptional.get();
-            return new AlunoResponseDTO(aluno);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com o ID: " + alunoId);
-        }
-    }
-
-    public List<AlunoResponseDTO> getAlunosByStatus(String status) {
-        List<Aluno> alunos = alunoRepository.findByStatusIgnoreCaseContains(status);
-
-        return alunos.stream()
-                .map(AlunoResponseDTO::new)
-                .collect(Collectors.toList());
-    }
-
-    public Aluno alterarStatusPorCodigo(Long id, AlunoRequestDTO alunoRequestDTO) {
-        Optional<Aluno> optionalAluno = alunoRepository.findById(id);
-
-        if (optionalAluno.isPresent()) {
-            Aluno aluno = optionalAluno.get();
-
-            validateStatus(alunoRequestDTO.status());
-
-            aluno.setStatus(alunoRequestDTO.status());
-
-            alunoRepository.save(aluno);
-
             return aluno;
         } else {
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com o id" + alunoId);
         }
+    }
+
+    public List<Aluno> getAlunosByStatus(String status) {
+        List<Aluno> alunos = alunoRepository.findByStatusIgnoreCaseContains(status);
+        return alunos;
     }
 
 

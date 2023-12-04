@@ -1,12 +1,18 @@
 package com.example.biblioteca.model.dto.Bibliotecario;
 
 import com.example.biblioteca.model.Bibliotecario;
+import lombok.Data;
 
-public record BibliotecarioResponseDTO(Long id, String nome, String status, String setor) {
 
-    public BibliotecarioResponseDTO(Bibliotecario bibliotecario){
-        this(bibliotecario.getId(), bibliotecario.getNome(), bibliotecario.getStatus(), bibliotecario.getSetor());
-    }
+@Data
+public class BibliotecarioResponseDTO{
+
+
+    private Long id;
+    private String nome;
+    private String status;
+    private String setor;
+    private String contato;
 
 
 }

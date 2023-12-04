@@ -8,7 +8,10 @@ import com.example.biblioteca.model.dto.Bibliotecario.BibliotecarioResponseDTO;
 import com.example.biblioteca.model.dto.Livro.LivroRequestDTO;
 import com.example.biblioteca.model.dto.Livro.LivroResponseDTO;
 import com.example.biblioteca.service.LivroService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.builder.ToStringSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,51 +29,74 @@ public class LivroController {
 
     private final LivroService livroService;
 
+    @Tag(name = "Listar livros")
+    @Operation(summary = "Lista todos os livros disponiveis no BD")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping
-    public ResponseEntity<List<LivroResponseDTO>> livroList() {
-        List<LivroResponseDTO> livros = livroService.livroList();
-        return ResponseEntity.ok(livros);
+    public ResponseEntity<?> livroList() {
+    try {
+        List<Livro> livros = livroService.livroList();
+        return new ResponseEntity<>(livros, HttpStatus.OK);
+    } catch (Exception ex){
+        return new ResponseEntity<>("Erro ao processar os dados", HttpStatus.BAD_GATEWAY);
+    }
     }
 
+
+    @Tag(name = "Busca por id")
+    @Operation (summary = "Lista o livro pelo seu id primário")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping("/buscaPorId/{id}")
     public ResponseEntity<?> getLivrobyId(@PathVariable Long id) {
-        try {
-            LivroResponseDTO livroResponseDTO = livroService.getLivroById(id);
-            return ResponseEntity.ok(livroResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        Livro livro = livroService.getLivroById(id);
+        return ResponseEntity.ok(livro);
     }
 
+    @Tag(name = "Busca por titulo")
+    @Operation(summary = "Retorna os livros pelo seu titulo")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping("/titulo")
     public ResponseEntity<?> getLivroByTitle(@RequestParam String title) {
         try {
-            LivroResponseDTO livroResponseDTO = livroService.getLivroByTitle(title);
-            return ResponseEntity.ok(livroResponseDTO);
-        }  catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Optional<Livro> livro = livroService.getLivroByTitle(title);
+            return new ResponseEntity<>(livro, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_GATEWAY);
         }
     }
 
+    @Tag(name = "Adicionar livros")
+    @Operation(summary = "Adiciona livros ao banco de dados")
     @PreAuthorize("hasRole('PRODUCT_INSERT')")
     @PostMapping
-    public ResponseEntity<LivroResponseDTO> addLivro(@RequestBody LivroRequestDTO livroRequestDTO) {
-        LivroResponseDTO livroResponseDTO = livroService.addLivro(livroRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(livroResponseDTO);
+    public ResponseEntity<?> addLivro(@RequestBody LivroRequestDTO livroRequestDTO) {
+        try {
+            Livro livro = livroService.addLivro(livroRequestDTO);
+            return new ResponseEntity<>(livro, HttpStatus.CREATED);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_GATEWAY);
+        }
     }
 
+    @Tag(name = "Atualiza livros")
+    @Operation(summary = "Atualiza livros existentes")
     @PreAuthorize("hasRole('PRODUCT_UPDATE')")
     @PutMapping("/{id}")
-    public ResponseEntity<LivroResponseDTO> updateLivro(
+    public ResponseEntity<?> updateLivro(
             @PathVariable Long id,
-            @RequestBody LivroRequestDTO livroRequestDTO) {
-        LivroResponseDTO livroResponseDTO = livroService.updateLivro(id, livroRequestDTO);
-        return ResponseEntity.ok(livroResponseDTO);
+            @RequestBody LivroResponseDTO livroResponseDTO) {
+        try {
+            var livro = livroService.updateLivro(id, livroResponseDTO);
+            return new ResponseEntity<>(livro, HttpStatus.OK);
+        } catch (Exception ex) {
+            return  new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_GATEWAY);
+        }
+
     }
 
+
+    @Tag(name = "Deletar Livros")
+    @Operation(summary = "Deleta livros existentes pelo seu id")
     @PreAuthorize("hasRole('PRODUCT_DELETE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLivro(@PathVariable Long id) {
@@ -79,25 +105,6 @@ public class LivroController {
     }
 
 
-    @PreAuthorize("hasRole('PRODUCT_UPDATE')")
-    @PatchMapping("/alterar-disponibilidade/{id}")
-    public ResponseEntity<LivroResponseDTO> alterarDisponibilidade(@RequestBody LivroRequestDTO livroRequestDTO,
-                                                                  @PathVariable("id") Long id) {
-        try {
-            // Utilize o método alterarStatusPorCodigo no serviço, passando o AlunoRequestDTO
-            Livro livroAtualizado = livroService.alterarDisponibilidade(id, livroRequestDTO);
-
-            if (livroAtualizado != null) {
-                // Converta o Aluno para AlunoResponseDTO se necessário
-                LivroResponseDTO livroResponseDTO = new LivroResponseDTO(livroAtualizado);
-                return new ResponseEntity<>(livroResponseDTO, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
 
 
 }

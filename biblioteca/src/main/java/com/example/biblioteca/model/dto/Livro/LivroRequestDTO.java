@@ -1,4 +1,15 @@
 package com.example.biblioteca.model.dto.Livro;
 
-public record LivroRequestDTO(String title, String autor, String descricao, Long ISBN, String disponibilidade) {
+
+import lombok.Data;
+
+@Data
+public class LivroRequestDTO {
+
+
+    private String title;
+    private String autor;
+    private String descricao;
+    private Long ISBN;
+
 }

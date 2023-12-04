@@ -1,8 +1,13 @@
 package com.example.biblioteca.model.dto.Aluno;
 
 
+import lombok.Data;
 
+@Data
+public class AlunoRequestDTO{
 
-public record AlunoRequestDTO(String nome, Long matricula, String status, String disponibilidade) {
+        private String nome;
+        private Long matricula;
+        private String contato;
 
 }

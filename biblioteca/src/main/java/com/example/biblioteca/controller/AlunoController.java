@@ -5,13 +5,18 @@ import com.example.biblioteca.model.Aluno;
 import com.example.biblioteca.model.dto.Aluno.AlunoRequestDTO;
 import com.example.biblioteca.model.dto.Aluno.AlunoResponseDTO;
 import com.example.biblioteca.service.AlunoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,93 +27,100 @@ public class AlunoController {
 
     private final AlunoService alunoService;
 
+
+    @Tag(name = "Busca alunos")
+    @Operation(summary = "Retorna todos os alunos")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping
-    public ResponseEntity<List<AlunoResponseDTO>> alunoList() {
-        List<AlunoResponseDTO> alunos = alunoService.alunoList();
-        return ResponseEntity.ok(alunos);
+    public ResponseEntity<?> alunoList() {
+        try {
+            List<Aluno> alunos = alunoService.alunoList();
+            return new ResponseEntity<>(alunos, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_GATEWAY);
+        }
+
     }
 
+
+    @Tag(name = "Busca por status")
+    @Operation(summary = "Retorna aluno pelos seus status")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping("/status")
     public ResponseEntity<?> getAlunosByStatus(@RequestParam String status) {
         try {
-            List<AlunoResponseDTO> alunos = alunoService.getAlunosByStatus(status);
-
-            if (!alunos.isEmpty()) {
-                return ResponseEntity.ok(alunos);
-            } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nenhum aluno encontrado com o status: " + status);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            List<Aluno> aluno = alunoService.getAlunosByStatus(status);
+            return new ResponseEntity<>(aluno, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_GATEWAY);
         }
     }
 
+
+    @Tag(name = "Busca por id")
+    @Operation(summary = "Busca alunos pelo seu id")
     @PreAuthorize("hasRole('PRODUCT_SELECT')")
     @GetMapping("/id/{id}")
     public ResponseEntity<?> getAlunoById(@PathVariable Long id) {
         try {
-            AlunoResponseDTO alunoResponseDTO = alunoService.getAlunoById(id);
-            return ResponseEntity.ok(alunoResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Aluno aluno = alunoService.getAlunoById(id);
+            return ResponseEntity.ok(aluno);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_REQUEST);
         }
     }
 
+
+    @Tag(name = "Adiciona aluno")
+    @Operation(summary = "Adiciona alunos no banco de dados")
     @PreAuthorize("hasRole('PRODUCT_INSERT')")
     @PostMapping
     public ResponseEntity<?> addAluno(@RequestBody AlunoRequestDTO alunoRequestDTO) {
         try {
-            AlunoResponseDTO alunoResponseDTO = alunoService.addAluno(alunoRequestDTO);
-            return ResponseEntity.ok(alunoResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Aluno aluno = alunoService.addAluno(alunoRequestDTO);
+            return new ResponseEntity<>(aluno, HttpStatus.CREATED);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_REQUEST);
         }
     }
 
+
+    @Tag(name = "Atualiza Aluno")
+    @Operation(summary = "Atualiza aluno pelo seu id")
     @PreAuthorize("hasRole('PRODUCT_UPDATE')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAluno(
             @PathVariable Long id,
-            @RequestBody AlunoRequestDTO alunoRequestDTO) {
+            @RequestBody AlunoResponseDTO alunoResponseDTO) {
         try {
-            AlunoResponseDTO alunoResponseDTO = alunoService.updateAluno(id, alunoRequestDTO);
-            return ResponseEntity.ok(alunoResponseDTO);
+            var aluno = alunoService.updateAluno(id, alunoResponseDTO);
+            return new ResponseEntity<>(aluno, HttpStatus.OK);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_REQUEST);
         }
     }
 
+
+    @Tag(name = "Deleta aluno")
+    @Operation(summary = "Deleta aluno pelo seu id")
     @PreAuthorize("hasRole('PRODUCT_DELETE')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAluno(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAluno(@PathVariable Long id) {
         try {
             alunoService.removeAluno(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity<>("Aluno removido",  HttpStatus.OK);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>("Erro ao processar dados", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PreAuthorize("hasRole('PRODUCT_UPDATE')")
     @PatchMapping("/alterar-status/{id}")
-    public ResponseEntity<AlunoResponseDTO> alterarStatus(@RequestBody AlunoRequestDTO alunoRequestDTO,
-                                                          @PathVariable("id") Long id) {
-        try {
-            Aluno alunoAtualizado = alunoService.alterarStatusPorCodigo(id, alunoRequestDTO);
-
-            if (alunoAtualizado != null) {
-                AlunoResponseDTO alunoResponseDTO = new AlunoResponseDTO(alunoAtualizado);
-                return new ResponseEntity<>(alunoResponseDTO, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<AlunoResponseDTO> alterarStatus(@RequestBody AlunoResponseDTO alunoResponseDTO,
+                                               @PathVariable("id") Long id){
+        return new ResponseEntity<>(alunoResponseDTO, HttpStatus.OK);
     }
-
 }
+
+
 
 

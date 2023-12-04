@@ -22,6 +22,7 @@ public class Bibliotecario {
     private String nome;
     private String status; // Ativo, Demitido, Ferias
     private String setor;
+    private String contato;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -32,10 +33,5 @@ public class Bibliotecario {
     public void prePersist() { createdAt = LocalDateTime.now(); }
 
 
-    public Bibliotecario(BibliotecarioRequestDTO data){
-        this.nome = data.nome();
-        this.status = data.status();
-        this.setor = data.setor();
-    }
 
 }

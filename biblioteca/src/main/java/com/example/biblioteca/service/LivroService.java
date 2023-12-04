@@ -1,21 +1,17 @@
 package com.example.biblioteca.service;
 
-import com.example.biblioteca.model.Bibliotecario;
 import com.example.biblioteca.model.Livro;
-import com.example.biblioteca.model.dto.Bibliotecario.BibliotecarioRequestDTO;
 import com.example.biblioteca.model.dto.Livro.LivroRequestDTO;
 import com.example.biblioteca.model.dto.Livro.LivroResponseDTO;
 import com.example.biblioteca.repository.LivroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class LivroService {
@@ -34,60 +30,66 @@ public class LivroService {
 
 
     //Adiciona livro
-    public LivroResponseDTO addLivro(LivroRequestDTO livroRequestDTO) {
-        try {
-            Livro livro = new Livro(livroRequestDTO);
-            Livro savedLivro = livroRepository.save(livro);
-            return new LivroResponseDTO(savedLivro);
-        } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("Erro ao criar livro. Verifique se todos os campos estão preenchidos", e);
-        }
+    public Livro addLivro(LivroRequestDTO data) {
+        Livro livro = new Livro();
+        livro.setTitle(data.getTitle());
+        livro.setAutor(data.getAutor());
+        livro.setDescricao(data.getDescricao());
+        livro.setISBN(data.getISBN());
+        livroRepository.save(livro);
+        return livro;
     }
 
 
     //Remove livro
     public void removeLivro(Long livroId) {
-        try {
-            livroRepository.deleteById(livroId);
-            System.out.println("Livro removido com sucesso!");
-        } catch (EmptyResultDataAccessException e) {
-            System.out.println("Livro não encontrado com o ID: " + livroId);
-        } catch (DataIntegrityViolationException e) {
-            System.err.println("Ocorreu um erro ao remover o livro: " + e.getMessage());
-        }
+        livroRepository.deleteById(livroId);
     }
 
     //Atualiza Livro
-    public LivroResponseDTO updateLivro(Long livroId, LivroRequestDTO livroRequestDTO) {
-        Livro existingLivro = livroRepository.findById(livroId)
-                .orElseThrow(() -> new IllegalArgumentException("Livro não encontrado com o ID: " + livroId));
+    public ResponseEntity<Livro> updateLivro(Long livroId, LivroResponseDTO livroResponseDTO) {
+        Livro livro = livroRepository.findById(livroId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado com o ID: " + livroId));
 
-        existingLivro.setTitle(livroRequestDTO.title());
-        existingLivro.setISBN(livroRequestDTO.ISBN());
-        existingLivro.setDescricao(livroRequestDTO.descricao());
-        existingLivro.setAutor(livroRequestDTO.autor());
-        existingLivro.setDisponibilidade(livroRequestDTO.disponibilidade());
+        if (livroResponseDTO.getAutor() != null) {
+            livro.setAutor(livroResponseDTO.getAutor());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
-        Livro updatedLivro = livroRepository.save(existingLivro);
-        return new LivroResponseDTO(updatedLivro);
+        if (livroResponseDTO.getDescricao() != null) {
+            livro.setDescricao(livroResponseDTO.getDescricao());
+        }
+
+        if (livroResponseDTO.getISBN() != null) {
+            livro.setISBN(livroResponseDTO.getISBN());
+        }
+
+        if (livroResponseDTO.getDisponibilidade() != null) {
+            livro.setDisponibilidade(livroResponseDTO.getDisponibilidade());
+        }
+
+        if (livroResponseDTO.getTitle() != null) {
+            livro.setTitle(livroResponseDTO.getTitle());
+        }
+
+        livroRepository.save(livro);
+        return ResponseEntity.ok(livro);
     }
 
 
     //Lista livro
-    public List<LivroResponseDTO> livroList() {
-        List<Livro> livros = livroRepository.findAll();
-        return livros.stream()
-                .map(LivroResponseDTO::new)
-                .collect(Collectors.toList());
+    public List<Livro> livroList() {
+        return livroRepository.findAll();
     }
 
 
     // Lista por id
-    public LivroResponseDTO getLivroById(Long livroId) {
+    public Livro getLivroById(Long livroId) {
         Optional<Livro> livroOptional = livroRepository.findById(livroId);
         if(livroOptional.isPresent()) {
             Livro livro = livroOptional.get();
-            return new LivroResponseDTO(livro);
+            return livro;
 
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado com o id" + livroId);
@@ -95,31 +97,28 @@ public class LivroService {
     }
 
     // Lista livro por titulo
-    public LivroResponseDTO getLivroByTitle(String title) {
-        Optional<Livro> livroOptional = livroRepository.findByTitleIgnoreCaseContains(title);
-
-        return livroOptional
-                .map(livro -> new LivroResponseDTO(livro))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado com o Título:" + title));
+    public Optional<Livro> getLivroByTitle(String title) {
+        Optional<Livro> livro = livroRepository.findByTitleIgnoreCaseContains(title);
+        return livro;
     }
 
 
     //Altera disponibilidade por id
-    public Livro alterarDisponibilidade(Long id, LivroRequestDTO livroRequestDTO) {
-        Optional<Livro> optionalLivro = livroRepository.findById(id);
-
-        if (optionalLivro.isPresent()) {
-            Livro livro = optionalLivro.get();
-
-            livro.setDisponibilidade(livroRequestDTO.disponibilidade());
-
-            livroRepository.save(livro);
-
-            return livro;
-        } else {
-            throw new IllegalArgumentException("Erro");
-        }
-    }
+//    public Livro alterarDisponibilidade(Long id, LivroRequestDTO livroRequestDTO) {
+//        Optional<Livro> optionalLivro = livroRepository.findById(id);
+//
+//        if (optionalLivro.isPresent()) {
+//            Livro livro = optionalLivro.get();
+//
+//            livro.setDisponibilidade(livroRequestDTO.disponibilidade());
+//
+//            livroRepository.save(livro);
+//
+//            return livro;
+//        } else {
+//            throw new IllegalArgumentException("Erro");
+//        }
+//    }
 
 
 
